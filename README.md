@@ -3,7 +3,7 @@
 
 📚 **UniSearch AI** is an AI-powered unified search and recommendation platform that helps users discover the **most relevant books, videos, articles, and movies** from a single natural-language query.
 
-🔗 **Live Demo:** https://unisearch-ai.streamlit.app *(replace after deploy)*
+🔗 **Live Demo:** https://unisearch-ai-mcc3ez6vcyq2s78emdju3f.streamlit.app/
 
 ---
 
