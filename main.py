@@ -117,25 +117,35 @@ def create_embeddings(items):
     texts, clean_items = [], []
 
     for item in items:
-        text = f"{item['title']} {item['description']}".strip()
-        if text:
+        title = item.get("title", "").strip()
+        desc = item.get("description", "").strip()
+
+        # ✅ Use title even if description is missing
+        if title:
+            text = title + (" " + desc if desc else "")
             texts.append(text)
             clean_items.append(item)
 
     if not texts:
         return None, []
 
-    return model.encode(texts), clean_items
+    embeddings = model.encode(texts)
+    return embeddings, clean_items
+
 
 # =========================
 # FAISS SEARCH
 # =========================
 def search_top_k(query, items, embeddings, k=5):
+    k = min(k, len(items))  # 🔥 critical
     query_vec = model.encode([query])
+
     index = faiss.IndexFlatL2(embeddings.shape[1])
     index.add(np.array(embeddings))
+
     _, idx = index.search(query_vec, k)
     return [items[i] for i in idx[0]]
+
 
 # =========================
 # AGGREGATOR
