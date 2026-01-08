@@ -44,7 +44,13 @@ model = load_model()
 def fetch_books(query, max_results=10):
     url = "https://www.googleapis.com/books/v1/volumes"
     params = {"q": query, "maxResults": max_results}
-    data = requests.get(url, params=params).json()
+    headers = {"User-Agent": "UniSearchAI/1.0"}
+    #data = requests.get(url, params=params).json()
+    response = requests.get(url, params=params, headers=headers)
+    data = response.json()
+    if "items" not in data:
+        return []
+
 
     return [
         {
@@ -52,7 +58,7 @@ def fetch_books(query, max_results=10):
             "description": item.get("volumeInfo", {}).get("description", ""),
             "link": item.get("volumeInfo", {}).get("previewLink", "")
         }
-        for item in data.get("items", [])
+        for item in data.get("items")
     ]
 
 # =========================
