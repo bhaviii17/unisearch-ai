@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
+st.write("Books API key present:", bool(os.getenv("GOOGLE_BOOKS_API_KEY")))
+st.cache_data.clear()
+
 # =========================
 # CONFIG
 # =========================
@@ -41,25 +44,22 @@ model = load_model()
 # GOOGLE BOOKS
 # =========================
 @st.cache_data(show_spinner=False)
+
 def fetch_books(query, max_results=10):
     url = "https://www.googleapis.com/books/v1/volumes"
-    params = {"q": query, "maxResults": max_results}
-    headers = {"User-Agent": "UniSearchAI/1.0"}
-    #data = requests.get(url, params=params).json()
-    response = requests.get(url, params=params, headers=headers)
+    params = {
+        "q": query,
+        "maxResults": max_results,
+        "key": os.getenv("GOOGLE_BOOKS_API_KEY")
+    }
+
+    response = requests.get(url, params=params, timeout=10)
+    st.write("Books status:", response.status_code)
+    st.write("Books raw response:", response.text[:500])
+
     data = response.json()
-    if "items" not in data:
-        return []
-
-
-    return [
-        {
-            "title": item.get("volumeInfo", {}).get("title", ""),
-            "description": item.get("volumeInfo", {}).get("description", ""),
-            "link": item.get("volumeInfo", {}).get("previewLink", "")
-        }
-        for item in data.get("items")
-    ]
+    items = data.get("items", [])
+    return items
 
 # =========================
 # YOUTUBE
