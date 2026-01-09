@@ -43,23 +43,33 @@ model = load_model()
 # =========================
 # GOOGLE BOOKS
 # =========================
-@st.cache_data(show_spinner=False)
 
-def fetch_books(query, max_results=10):
-    url = "https://www.googleapis.com/books/v1/volumes"
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def fetch_books(query, limit=10):
+    url = "https://openlibrary.org/search.json"
     params = {
         "q": query,
-        "maxResults": max_results,
-        "key": os.getenv("GOOGLE_BOOKS_API_KEY")
+        "limit": limit
     }
 
     response = requests.get(url, params=params, timeout=10)
-    st.write("Books status:", response.status_code)
-    st.write("Books raw response:", response.text[:500])
+    if response.status_code != 200:
+        return []
 
     data = response.json()
-    items = data.get("items", [])
-    return items
+    books = []
+
+    for doc in data.get("docs", []):
+        books.append({
+            "title": doc.get("title", "Unknown"),
+            "author": ", ".join(doc.get("author_name", [])),
+            "year": doc.get("first_publish_year", "N/A"),
+            "link": f"https://openlibrary.org{doc.get('key', '')}"
+        })
+
+    return books
+
 
 # =========================
 # YOUTUBE
