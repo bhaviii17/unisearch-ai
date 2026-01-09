@@ -48,10 +48,7 @@ model = load_model()
 @st.cache_data(show_spinner=False, ttl=3600)
 def fetch_books(query, limit=10):
     url = "https://openlibrary.org/search.json"
-    params = {
-        "q": query,
-        "limit": limit
-    }
+    params = {"q": query, "limit": limit}
 
     response = requests.get(url, params=params, timeout=10)
     if response.status_code != 200:
@@ -61,14 +58,18 @@ def fetch_books(query, limit=10):
     books = []
 
     for doc in data.get("docs", []):
+        title = doc.get("title", "Unknown Title")
+        author = ", ".join(doc.get("author_name", [])) or "Unknown Author"
+        year = doc.get("first_publish_year", "N/A")
+
         books.append({
-            "title": doc.get("title", "Unknown"),
-            "author": ", ".join(doc.get("author_name", [])),
-            "year": doc.get("first_publish_year", "N/A"),
+            "title": title,
+            "description": f"Author: {author} | First published: {year}",
             "link": f"https://openlibrary.org{doc.get('key', '')}"
         })
 
     return books
+
 
 
 # =========================
@@ -136,9 +137,8 @@ def create_embeddings(items):
         title = item.get("title", "").strip()
         desc = item.get("description", "").strip()
 
-        # ✅ Use title even if description is missing
-        if title:
-            text = title + (" " + desc if desc else "")
+        if title or desc:
+            text = f"{title}. {desc}".strip()
             texts.append(text)
             clean_items.append(item)
 
@@ -147,6 +147,7 @@ def create_embeddings(items):
 
     embeddings = model.encode(texts)
     return embeddings, clean_items
+
 
 
 # =========================
@@ -266,7 +267,9 @@ if st.button("Search") and query.strip():
 
             for i, item in enumerate(items, 1):
                 st.markdown(f"### {i}. {item['title']}")
-                st.write(item["description"][:250] or "No description")
+                desc = item.get("description", "No description available")
+                st.write(desc[:250])
+
                 st.markdown(f"[🔗 Open Link]({item['link']})")
                 st.divider()
 
